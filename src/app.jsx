@@ -1,23 +1,17 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { TaskProvider } from './context/TaskContext.jsx';
+import Index from './pages/Index.jsx';
+import NotFound from './pages/NotFound.jsx';
 
-import { MantineProvider } from '@mantine/core'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { RouterProvider } from 'react-router'
-import { ROUTES } from './routes/routes.jsx'
-
-import "./styles/index.css";
-
-const container = document.getElementById("app");
-const queryClient = new QueryClient();
-
-// Исправление: используем createRoot напрямую, а не ReactDOM.createRoot
-createRoot(container).render(
-  <StrictMode>
-    <MantineProvider>
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={ROUTES} />
-      </QueryClientProvider>
-    </MantineProvider>
-  </StrictMode>,
+const App = () => (
+  <TaskProvider>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  </TaskProvider>
 );
+
+export default App;

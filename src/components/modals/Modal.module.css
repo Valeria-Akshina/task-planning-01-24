@@ -1,0 +1,109 @@
+.overlay {
+  @apply fixed inset-0 z-50 flex items-center justify-center;
+}
+
+.backdrop {
+  @apply fixed inset-0 bg-black/50;
+}
+
+.modal {
+  @apply relative bg-card rounded-xl shadow-xl border border-border w-full max-w-md mx-4 p-6;
+}
+
+.modalTitle {
+  @apply text-lg font-semibold text-foreground mb-4;
+}
+
+.form {
+  @apply flex flex-col gap-4;
+}
+
+.input {
+  @apply border border-border rounded-lg px-3 py-2 text-sm outline-none bg-background text-foreground;
+}
+
+.input:focus {
+  @apply ring-2 ring-ring;
+}
+
+.textarea {
+  composes: input;
+  @apply min-h-[80px] resize-none;
+}
+
+.fieldLabel {
+  @apply text-xs font-medium text-muted-foreground mb-1.5 block;
+}
+
+.categoryRow {
+  @apply flex gap-2;
+}
+
+.categoryBtn {
+  @apply flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors border-border text-muted-foreground;
+}
+
+.categoryBtn:hover {
+  @apply border-primary/50;
+}
+
+.categoryBtnActive {
+  composes: categoryBtn;
+  @apply border-primary bg-primary/10 text-foreground;
+}
+
+.categoryBtnActive:hover {
+  @apply border-primary;
+}
+
+.categoryDot {
+  @apply w-2 h-2 rounded-full;
+}
+
+.assigneesList {
+  @apply flex items-center gap-2 flex-wrap;
+}
+
+.assigneeBtn {
+  @apply w-8 h-8 rounded-full text-white text-xs font-semibold flex items-center justify-center;
+}
+
+.assigneeBtn:hover {
+  @apply opacity-70;
+}
+
+.assigneeInput {
+  @apply flex items-center gap-1;
+}
+
+.initialsInput {
+  @apply w-12 border border-border rounded-lg px-2 py-1 text-sm text-center outline-none bg-background text-foreground;
+}
+
+.initialsInput:focus {
+  @apply ring-2 ring-ring;
+}
+
+.addBtn {
+  @apply text-xs text-primary;
+}
+
+.addBtn:hover {
+  @apply underline;
+}
+
+.submitBtn {
+  @apply bg-primary text-primary-foreground rounded-lg py-2 text-sm font-medium transition-opacity;
+}
+
+.submitBtn:hover {
+  @apply opacity-90;
+}
+
+.switchBtn {
+  @apply text-sm text-muted-foreground transition-colors;
+}
+
+.switchBtn:hover {
+  @apply text-foreground;
+}

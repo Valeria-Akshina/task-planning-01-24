@@ -1,0 +1,31 @@
+.column {
+  @apply flex-1 min-w-[300px];
+}
+
+.columnHeader {
+  @apply flex items-center justify-between mb-4;
+}
+
+.columnTitle {
+  @apply font-semibold text-foreground text-base;
+}
+
+.columnActions {
+  @apply flex items-center gap-1;
+}
+
+.columnBtn {
+  @apply text-muted-foreground p-1 rounded transition-colors;
+}
+
+.columnBtn:hover {
+  @apply text-foreground;
+}
+
+.columnBtnIcon {
+  @apply w-5 h-5;
+}
+
+.taskList {
+  @apply flex flex-col gap-3;
+}

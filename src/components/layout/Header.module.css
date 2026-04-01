@@ -1,0 +1,47 @@
+.header {
+  @apply h-16 border-b border-border bg-card flex items-center justify-between px-6;
+}
+
+.searchBox {
+  @apply flex items-center gap-3 rounded-lg px-3 py-2 w-64;
+}
+
+.searchIcon {
+  @apply w-4 h-4 text-muted-foreground;
+}
+
+.searchInput {
+  @apply bg-transparent outline-none text-sm text-foreground w-full;
+}
+
+.searchInput::placeholder {
+  @apply text-muted-foreground;
+}
+
+.actions {
+  @apply flex items-center gap-4;
+}
+
+.iconBtn {
+  @apply text-muted-foreground transition-colors;
+}
+
+.iconBtn:hover {
+  @apply text-foreground;
+}
+
+.iconBtnSvg {
+  @apply w-5 h-5;
+}
+
+.avatar {
+  @apply w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold;
+}
+
+.guestAvatar {
+  @apply w-9 h-9 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-border;
+}
+
+.guestAvatarImg {
+  @apply w-full h-full;
+}

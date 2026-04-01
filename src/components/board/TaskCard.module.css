@@ -1,0 +1,72 @@
+.card {
+  @apply bg-card rounded-xl p-4 shadow-sm border border-border/50 relative;
+}
+
+.cardHeader {
+  @apply flex items-center justify-between mb-2;
+}
+
+.category {
+  @apply flex items-center gap-1.5;
+}
+
+.categoryDot {
+  @apply w-2 h-2 rounded-full;
+}
+
+.categoryLabel {
+  @apply text-[11px] font-medium text-muted-foreground tracking-wide;
+}
+
+.menuWrapper {
+  @apply relative;
+}
+
+.menuBtn {
+  @apply text-muted-foreground p-1 rounded transition-colors;
+}
+
+.menuBtn:hover {
+  @apply text-foreground;
+}
+
+.menuBtnIcon {
+  @apply w-4 h-4;
+}
+
+.dropdown {
+  @apply absolute right-0 top-7 bg-card border border-border rounded-lg shadow-lg z-10 min-w-[140px] py-1;
+}
+
+.dropdownItem {
+  @apply w-full text-left px-3 py-2 text-sm transition-colors;
+}
+
+.dropdownItem:hover {
+  @apply bg-secondary;
+}
+
+.dropdownItemDelete {
+  composes: dropdownItem;
+  @apply text-destructive;
+}
+
+.title {
+  @apply font-semibold text-foreground text-sm mb-1;
+}
+
+.description {
+  @apply text-xs text-muted-foreground leading-relaxed mb-3;
+}
+
+.assignees {
+  @apply flex items-center;
+}
+
+.assignee {
+  @apply w-7 h-7 rounded-full text-white text-[10px] font-semibold flex items-center justify-center border-2 border-card;
+}
+
+.assigneeOverlap {
+  @apply -ml-1.5;
+}
