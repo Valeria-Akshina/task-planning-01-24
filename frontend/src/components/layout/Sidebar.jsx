@@ -12,7 +12,6 @@ const Sidebar = () => {
   return (
     <aside className={styles.sidebar}>
       <div className={styles.logo}>
-
         <span className={styles.logoText}>Pro Manage</span>
       </div>
       <nav className={styles.nav}>
