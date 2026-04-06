@@ -1,50 +1,93 @@
 import { useState, useEffect } from 'react';
-import { CATEGORY_CONFIG, AVATAR_COLORS } from '../../store/taskStore.js';
 import styles from './Modal.module.css';
+
+const TASK_TYPES = {
+  'design_system': 'Дизайн',
+  'development': 'Разработка',
+  'testing': 'Тестирование',
+  'documentation': 'Документация',
+  'meeting': 'Совещание',
+};
 
 const TaskModal = ({ open, onClose, onSubmit, initialData, defaultStatus = 'todo' }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('design_system');
-  const [assignees, setAssignees] = useState([]);
-  const [newInitials, setNewInitials] = useState('');
+  const [type, setType] = useState('design_system'); // type вместо category
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (initialData) {
       setTitle(initialData.title);
       setDescription(initialData.description);
-      setCategory(initialData.category);
-      setAssignees(initialData.assignees);
+      setType(initialData.type || 'design_system');
     } else {
       setTitle('');
       setDescription('');
-      setCategory('design_system');
-      setAssignees([]);
+      setType('design_system');
     }
   }, [initialData, open]);
 
-  const addAssignee = () => {
-    if (newInitials.trim().length >= 1) {
-      const color = AVATAR_COLORS[assignees.length % AVATAR_COLORS.length];
-      setAssignees([...assignees, { initials: newInitials.trim().toUpperCase().slice(0, 2), color }]);
-      setNewInitials('');
-    }
-  };
-
-  const removeAssignee = (index) => {
-    setAssignees(assignees.filter((_, i) => i !== index));
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit({
-      title,
-      description,
-      status: initialData?.status ?? defaultStatus,
-      category,
-      assignees,
-    });
-    onClose();
+    setLoading(true);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      if (initialData) {
+        // Обновление задачи
+        const response = await fetch(`/api/tasks/${initialData.id_task}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            title,
+            description,
+            type,
+          }),
+        });
+        
+        if (response.ok) {
+          const updatedTask = await response.json();
+          onSubmit?.(updatedTask);
+          onClose();
+        } else {
+          const error = await response.json();
+          console.error('Ошибка обновления:', error);
+        }
+      } else {
+        // Создание задачи
+        const response = await fetch('/api/tasks', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            title,
+            description,
+            type,
+            user_id: user.id_user,
+          }),
+        });
+        
+        if (response.ok) {
+          const newTask = await response.json();
+          onSubmit?.(newTask);
+          onClose();
+        } else {
+          const error = await response.json();
+          console.error('Ошибка создания:', error);
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!open) return null;
@@ -56,36 +99,42 @@ const TaskModal = ({ open, onClose, onSubmit, initialData, defaultStatus = 'todo
         <h2 className={styles.modalTitle}>
           {initialData ? 'Редактировать задачу' : 'Новая задача'}
         </h2>
+        
         <form onSubmit={handleSubmit} className={styles.form}>
-          <input type="text" placeholder="Название" value={title} onChange={(e) => setTitle(e.target.value)} className={styles.input} required />
-          <textarea placeholder="Описание" value={description} onChange={(e) => setDescription(e.target.value)} className={styles.textarea} />
+          <input 
+            type="text" 
+            placeholder="Название" 
+            value={title} 
+            onChange={(e) => setTitle(e.target.value)} 
+            className={styles.input} 
+            required 
+          />
+          
+          <textarea 
+            placeholder="Описание" 
+            value={description} 
+            onChange={(e) => setDescription(e.target.value)} 
+            className={styles.textarea} 
+          />
+          
           <div>
-            <label className={styles.fieldLabel}>Категория</label>
+            <label className={styles.fieldLabel}>Тип задачи</label>
             <div className={styles.categoryRow}>
-              {Object.keys(CATEGORY_CONFIG).map((cat) => (
-                <button key={cat} type="button" onClick={() => setCategory(cat)} className={category === cat ? styles.categoryBtnActive : styles.categoryBtn}>
-                  <span className={`${styles.categoryDot} ${CATEGORY_CONFIG[cat].color}`} />
-                  {CATEGORY_CONFIG[cat].label}
+              {Object.entries(TASK_TYPES).map(([key, label]) => (
+                <button 
+                  key={key} 
+                  type="button" 
+                  onClick={() => setType(key)} 
+                  className={type === key ? styles.categoryBtnActive : styles.categoryBtn}
+                >
+                  {label}
                 </button>
               ))}
             </div>
           </div>
-          <div>
-            <label className={styles.fieldLabel}>Участники</label>
-            <div className={styles.assigneesList}>
-              {assignees.map((a, i) => (
-                <button key={i} type="button" onClick={() => removeAssignee(i)} className={`${styles.assigneeBtn} ${a.color}`} title="Нажмите чтобы удалить">
-                  {a.initials}
-                </button>
-              ))}
-              <div className={styles.assigneeInput}>
-                <input type="text" placeholder="AB" value={newInitials} onChange={(e) => setNewInitials(e.target.value)} maxLength={2} className={styles.initialsInput} />
-                <button type="button" onClick={addAssignee} className={styles.addBtn}>+</button>
-              </div>
-            </div>
-          </div>
-          <button type="submit" className={styles.submitBtn}>
-            {initialData ? 'Сохранить' : 'Добавить'}
+          
+          <button type="submit" className={styles.submitBtn} disabled={loading}>
+            {loading ? 'Сохранение...' : (initialData ? 'Сохранить' : 'Добавить')}
           </button>
         </form>
       </div>
