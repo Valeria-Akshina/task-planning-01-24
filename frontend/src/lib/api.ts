@@ -1,4 +1,4 @@
-const API_BASE = '/api'; // прокси перенаправит на localhost:3000
+const API_BASE = '/api';
 
 export interface User {
   id_user: number;
@@ -16,11 +16,7 @@ export interface Task {
   user_id: number;
 }
 
-export interface LoginResponse {
-  user: User;
-  token: string;
-}
-
+// ============ РЕГИСТРАЦИЯ ============
 export async function register(userData: {
   name: string;
   surname: string;
@@ -36,13 +32,14 @@ export async function register(userData: {
   return response.json();
 }
 
+// ============ ЛОГИН ============
 export async function login(email: string, password: string) {
   const response = await fetch(`${API_BASE}/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   });
-  const data: LoginResponse = await response.json();
+  const data = await response.json();
   
   if (data.token) {
     localStorage.setItem('token', data.token);
@@ -51,6 +48,7 @@ export async function login(email: string, password: string) {
   return data;
 }
 
+// ============ ЗАДАЧИ ============
 export async function getTasks(userId: number) {
   const token = localStorage.getItem('token');
   const response = await fetch(`${API_BASE}/users/${userId}/tasks`, {
