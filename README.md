@@ -1,5 +1,26 @@
 # Task Planning
 
+
+## 🚀 Быстрый запуск (через Docker)
+
+Это самый простой способ. Вам понадобится только установленный **Docker** и **Docker Desktop**.
+
+1. **Клонируйте репозиторий:**
+```bash
+git clone <ссылка-на-ваш-репозиторий>
+cd task-planning-01-24
+```
+
+2. **Запустите контейнеры:**
+```bash
+docker-compose up --build
+```
+
+3. **Настройте базу данных (выполните в новом окне терминала):**
+```bash
+docker-compose exec backend npx prisma migrate dev --name init
+```
+
 # Стек
 + Стейтменеджеры - [Tanstack Query](https://tanstack.com/query/latest), [Zustand](https://zustand.docs.pmnd.rs/learn/getting-started/introduction)
 + Работа с формами - [reach-hook-form](https://react-hook-form.com/), [yup](https://yup-docs.vercel.app/docs/intro)
