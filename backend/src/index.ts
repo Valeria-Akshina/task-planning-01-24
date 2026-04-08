@@ -15,157 +15,126 @@ const SECRET_KEY = process.env.JWT_SECRET || 'my-super-secret-key-2024';
 app.use(cors());
 app.use(express.json());
 
-// ============ РЕГИСТРАЦИЯ ============
+// Проверка токена
+const authenticateToken = (req: any, res: any, next: any) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Не авторизован' });
+
+  jwt.verify(token, SECRET_KEY, (err: any, user: any) => {
+    if (err) return res.status(403).json({ error: 'Токен невалиден' });
+    req.user = user;
+    next();
+  });
+};
+
+// --- AUTH ---
+
 app.post('/api/register', async (req, res) => {
-  console.log('📝 Получен запрос на регистрацию:', req.body);
-  
   try {
     const { name, surname, img, email, password } = req.body;
-    
-    // Проверка обязательных полей
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email и пароль обязательны' });
-    }
-    
     const hashedPassword = await bcrypt.hash(password, 10);
-    
     const user = await prisma.user.create({
-      data: {
-        name: name || 'User',
-        surname: surname || '',
-        img: img || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png',
-        email,
-        password: hashedPassword
-      }
+      data: { name, surname, img, email, password: hashedPassword }
     });
-    
-    console.log('✅ Пользователь создан:', user.email);
-    
     const { password: _, ...userWithoutPassword } = user;
     res.json(userWithoutPassword);
-  } catch (error: any) {
-    console.error('❌ Ошибка регистрации:', error);
-    
-    if (error.code === 'P2002') {
-      res.status(400).json({ error: 'Пользователь с таким email уже существует' });
-    } else {
-      res.status(500).json({ error: 'Ошибка сервера: ' + error.message });
-    }
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(400).json({ error: 'Ошибка регистрации' });
   }
 });
 
-// ============ ЛОГИН ============
 app.post('/api/login', async (req, res) => {
-  console.log('🔐 Получен запрос на вход:', req.body.email);
-  
   try {
     const { email, password } = req.body;
-    
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email и пароль обязательны' });
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ error: 'Неверные данные' });
     }
-    
-    const user = await prisma.user.findUnique({
-      where: { email }
-    });
-    
-    if (!user) {
-      return res.status(401).json({ error: 'Пользователь не найден' });
-    }
-    
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    
-    if (!isValidPassword) {
-      return res.status(401).json({ error: 'Неверный пароль' });
-    }
-    
-    const token = jwt.sign(
-      { userId: user.id_user, email: user.email },
-      SECRET_KEY,
-      { expiresIn: '7d' }
-    );
-    
+    const token = jwt.sign({ userId: user.id_user, email: user.email }, SECRET_KEY, { expiresIn: '7d' });
     const { password: _, ...userWithoutPassword } = user;
     res.json({ user: userWithoutPassword, token });
   } catch (error) {
-    console.error('❌ Ошибка входа:', error);
     res.status(500).json({ error: 'Ошибка сервера' });
   }
 });
 
-// ============ ЗАДАЧИ ============
+// --- TASKS ---
 
-// Получить все задачи пользователя
-app.get('/api/users/:userId/tasks', async (req, res) => {
+// Получение задач пользователя
+app.get('/api/users/:userId/tasks', authenticateToken, async (req, res) => {
   try {
-    const userId = parseInt(req.params.userId);
-    const tasks = await prisma.task.findMany({
-      where: { user_id: userId }
+    const userId = Number(req.params.userId);
+    if (isNaN(userId)) return res.status(400).json({ error: 'Invalid User ID' });
+
+    const tasks = await prisma.task.findMany({ 
+      where: { user_id: userId },
+      orderBy: { id_task: 'asc' } // Чтобы задачи не прыгали при обновлении
     });
     res.json(tasks);
   } catch (error) {
+    console.error('GET Tasks Error:', error);
     res.status(500).json({ error: 'Ошибка загрузки задач' });
   }
 });
 
-// Создать задачу
-app.post('/api/tasks', async (req, res) => {
+// Создание задачи
+app.post('/api/tasks', authenticateToken, async (req, res) => {
   try {
-    const { title, description, type, user_id } = req.body;
+    const { title, description, type, user_id, status } = req.body;
+    
+    // Приводим user_id к числу принудительно
     const task = await prisma.task.create({
       data: {
         title,
         description: description || '',
-        type: type || 'task',
-        user_id
+        type: type || 'design_system',
+        user_id: Number(user_id),
+        status: status || 'todo',
       }
     });
     res.json(task);
   } catch (error) {
-    res.status(500).json({ error: 'Ошибка создания задачи' });
+    console.error('POST Task Error:', error); // Это покажет точную ошибку Prisma в терминале
+    res.status(500).json({ error: 'Ошибка создания' });
   }
 });
 
-// Обновить задачу
-app.put('/api/tasks/:id', async (req, res) => {
+// Обновление задачи
+app.put('/api/tasks/:id', authenticateToken, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    const { title, description, type } = req.body;
+    const { title, description, type, status } = req.body;
+    
     const task = await prisma.task.update({
       where: { id_task: id },
-      data: { title, description, type }
+      data: { 
+        title, 
+        description, 
+        type, 
+        status 
+      }
     });
     res.json(task);
   } catch (error) {
-    res.status(500).json({ error: 'Ошибка обновления задачи' });
+    console.error('PUT Task Error:', error);
+    res.status(500).json({ error: 'Ошибка обновления' });
   }
 });
 
-// Удалить задачу
-app.delete('/api/tasks/:id', async (req, res) => {
+// Удаление задачи
+app.delete('/api/tasks/:id', authenticateToken, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    await prisma.task.delete({
-      where: { id_task: id }
-    });
-    res.json({ message: 'Задача удалена' });
+    await prisma.task.delete({ where: { id_task: id } });
+    res.json({ success: true, message: 'Удалено' });
   } catch (error) {
-    res.status(500).json({ error: 'Ошибка удаления задачи' });
+    console.error('DELETE Task Error:', error);
+    res.status(500).json({ error: 'Ошибка удаления' });
   }
 });
 
-// ============ ПРОВЕРКА ЗДОРОВЬЯ ============
-app.get('/api/health', async (req, res) => {
-  try {
-    await prisma.$connect();
-    res.json({ status: 'OK', database: 'connected' });
-  } catch (error) {
-    res.status(500).json({ status: 'ERROR', database: 'disconnected' });
-  }
-});
-
-// ============ ЗАПУСК ============
 app.listen(port, () => {
-  console.log(`Сервер запущен: http://localhost:${port}`);
-  console.log(`Проверка БД: http://localhost:${port}/api/health`);
+  console.log(`Сервер запущен на http://localhost:${port}`);
 });

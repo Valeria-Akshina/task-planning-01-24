@@ -22,6 +22,9 @@ model Task {
   title       String  @db.VarChar(100)
   description String  @db.Text
   type        String  @db.VarChar(50)
+  status      String  @db.VarChar(20) @default("todo")
   user_id     Int
   user        User    @relation(fields: [user_id], references: [id_user], onDelete: Cascade)
+
+  @@map("tasks")
 }
