@@ -15,16 +15,18 @@ const BoardColumn = ({ status, tasks, onAdd, onEdit, onDelete }) => {
         <h2 className={styles.columnTitle}>{STATUS_LABELS[status]}</h2>
         <div className={styles.columnActions}>
           <button onClick={() => onAdd(status)} className={styles.columnBtn}>
-            <Plus className={styles.columnBtnIcon} />
-          </button>
-          <button className={styles.columnBtn}>
-            <MoreHorizontal className={styles.columnBtnIcon} />
+            <Plus size={18} />
           </button>
         </div>
       </div>
       <div className={styles.taskList}>
         {tasks.map((task) => (
-          <TaskCard key={task.id} task={task} onEdit={onEdit} onDelete={onDelete} />
+          <TaskCard 
+            key={task.id_task} 
+            task={task} 
+            onEdit={onEdit} 
+            onDelete={onDelete}
+          />
         ))}
       </div>
     </div>

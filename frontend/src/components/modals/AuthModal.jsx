@@ -1,7 +1,8 @@
 import { useState } from 'react';
+import { login, register } from '../../lib/api';
 import styles from './Modal.module.css';
 
-const AuthModal = ({ open, onClose }) => {
+const AuthModal = ({ open, onClose = () => {} }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
@@ -17,71 +18,34 @@ const AuthModal = ({ open, onClose }) => {
 
     try {
       if (isLogin) {
-        // Логин
-        const response = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.error || 'Ошибка входа');
+        const result = await login(email, password);
+        if (result.token) {
+          onClose();
+          window.location.reload();
+        } else {
+          setError(result.error || 'Ошибка входа');
         }
-        
-        // Сохраняем токен и пользователя
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        
-        // Триггерим событие для обновления контекста
-        window.dispatchEvent(new Event('auth-change'));
-        
       } else {
-        // Регистрация
         const img = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
         
-        const response = await fetch('/api/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            name, 
-            surname, 
-            email, 
-            password,
-            img 
-          }),
+        const registerResult = await register({
+          name,
+          surname,
+          email,
+          password,
+          img,
         });
         
-        const data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.error || 'Ошибка регистрации');
-        }
-        
-        // После регистрации можно сразу войти
-        const loginResponse = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        });
-        
-        const loginData = await loginResponse.json();
-        
-        if (loginData.token) {
-          localStorage.setItem('token', loginData.token);
-          localStorage.setItem('user', JSON.stringify(loginData.user));
-          window.dispatchEvent(new Event('auth-change'));
+        if (registerResult.id_user) {
+          const loginResult = await login(email, password);
+          if (loginResult.token) {
+            onClose();
+            window.location.reload();
+          }
+        } else {
+          setError(registerResult.error || 'Ошибка регистрации');
         }
       }
-      
-      // Очищаем форму и закрываем модалку
-      setName('');
-      setSurname('');
-      setEmail('');
-      setPassword('');
-      onClose();
-      
     } catch (err) {
       setError(err.message);
     } finally {
@@ -139,11 +103,7 @@ const AuthModal = ({ open, onClose }) => {
             required 
           />
           
-          <button 
-            type="submit" 
-            className={styles.submitBtn} 
-            disabled={loading}
-          >
+          <button type="submit" className={styles.submitBtn} disabled={loading}>
             {loading ? 'Загрузка...' : (isLogin ? 'Войти' : 'Зарегистрироваться')}
           </button>
           

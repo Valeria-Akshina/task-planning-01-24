@@ -13,17 +13,16 @@ export interface Task {
   title: string;
   description: string;
   type: string;
+  status: string;
   user_id: number;
 }
 
-// ============ РЕГИСТРАЦИЯ ============
-export async function register(userData: {
-  name: string;
-  surname: string;
-  img: string;
-  email: string;
-  password: string;
-}) {
+const getHeaders = () => ({
+  'Content-Type': 'application/json',
+  'Authorization': `Bearer ${localStorage.getItem('token')}`
+});
+
+export async function register(userData: any) {
   const response = await fetch(`${API_BASE}/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -32,7 +31,6 @@ export async function register(userData: {
   return response.json();
 }
 
-// ============ ЛОГИН ============
 export async function login(email: string, password: string) {
   const response = await fetch(`${API_BASE}/login`, {
     method: 'POST',
@@ -40,7 +38,6 @@ export async function login(email: string, password: string) {
     body: JSON.stringify({ email, password }),
   });
   const data = await response.json();
-  
   if (data.token) {
     localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify(data.user));
@@ -48,66 +45,8 @@ export async function login(email: string, password: string) {
   return data;
 }
 
-// ============ ЗАДАЧИ ============
-export async function getTasks(userId: number) {
-  const token = localStorage.getItem('token');
-  const response = await fetch(`${API_BASE}/users/${userId}/tasks`, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-  return response.json();
-}
-
-export async function createTask(taskData: {
-  title: string;
-  description: string;
-  type: string;
-  user_id: number;
-}) {
-  const token = localStorage.getItem('token');
-  const response = await fetch(`${API_BASE}/tasks`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify(taskData),
-  });
-  return response.json();
-}
-
-export async function updateTask(id: number, taskData: {
-  title: string;
-  description: string;
-  type: string;
-}) {
-  const token = localStorage.getItem('token');
-  const response = await fetch(`${API_BASE}/tasks/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify(taskData),
-  });
-  return response.json();
-}
-
-export async function deleteTask(id: number) {
-  const token = localStorage.getItem('token');
-  const response = await fetch(`${API_BASE}/tasks/${id}`, {
-    method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-  return response.json();
-}
-
 export function logout() {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
+  localStorage.clear();
 }
 
 export function getCurrentUser(): User | null {
@@ -115,6 +54,35 @@ export function getCurrentUser(): User | null {
   return user ? JSON.parse(user) : null;
 }
 
-export function getToken(): string | null {
-  return localStorage.getItem('token');
+export async function getTasks(userId: number) {
+  const response = await fetch(`${API_BASE}/users/${userId}/tasks`, {
+    headers: getHeaders(),
+  });
+  return response.json();
+}
+
+export async function createTask(taskData: any) {
+  const response = await fetch(`${API_BASE}/tasks`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify(taskData),
+  });
+  return response.json();
+}
+
+export async function updateTask(id: number, taskData: any) {
+  const response = await fetch(`${API_BASE}/tasks/${id}`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify(taskData),
+  });
+  return response.json();
+}
+
+export async function deleteTask(id: number) {
+  const response = await fetch(`${API_BASE}/tasks/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return response.json();
 }

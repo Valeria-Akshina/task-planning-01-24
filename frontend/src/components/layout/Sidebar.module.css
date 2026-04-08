@@ -1,3 +1,27 @@
+.bottomSection {
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.logoutBtn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background: none;
+  color: #ff4d4f;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.logoutBtn:hover {
+  background: #fff1f0;
+}
+
 .sidebar {
   @apply w-[200px] min-h-screen border-r border-border flex flex-col p-4;
   background-color: hsl(var(--sidebar-bg));
